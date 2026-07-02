@@ -22,5 +22,11 @@
     "emoji": "🔊",
     "file": "sounds/asimismo.mp3",
     "color": "#D97706"
+  },
+  {
+    "name": "Dale de una vez",
+    "emoji": "🏃",
+    "file": "sounds/dale-de-una-vez.mp3",
+    "color": "#7C3AED"
   }
 ]
