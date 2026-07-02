@@ -16,5 +16,11 @@
     "emoji": "🫨",
     "file": "sounds/mira-la-adrenalina-que-tengo.mp3",
     "color": "#16A34A"
+  },
+  {
+    "name": "Guanaco",
+    "emoji": "🦙",
+    "file": "sounds/guanaco.mp3",
+    "color": "#D97706"
   }
 ]
