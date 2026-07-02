@@ -165,6 +165,44 @@
     .reorder-item.sortable-chosen { border-color: var(--red); }
     #reorder-empty { font-size: 12px; color: var(--text-muted); }
 
+    .r-actions { display: flex; gap: 2px; }
+    .r-action-btn {
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      border: none; background: none;
+      color: var(--text-muted);
+      cursor: pointer; padding: 5px 7px; border-radius: 6px;
+      line-height: 1;
+    }
+    .r-action-btn:hover { background: var(--bg); color: var(--red); }
+    .r-save {
+      font-weight: 600; font-size: 12px;
+      background: var(--red); color: #fff;
+      padding: 6px 12px; border-radius: 8px;
+    }
+    .r-save:hover    { background: var(--red-dark); color: #fff; }
+    .r-save:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; }
+    .r-cancel {
+      font-weight: 600; font-size: 12px;
+      border: 1.5px solid var(--border); padding: 6px 12px; border-radius: 8px;
+    }
+    .r-cancel:hover { border-color: var(--red); color: var(--red); background: none; }
+
+    .reorder-item.editing { border-color: var(--red); }
+    .reorder-item.editing .reorder-handle { opacity: 0.3; cursor: default; pointer-events: none; }
+    .reorder-item .r-edit-emoji,
+    .reorder-item .r-edit-name {
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px; padding: 6px 8px;
+      border: 1.5px solid var(--border); border-radius: 6px;
+      outline: none; color: var(--text-dark);
+      background: var(--bg);
+    }
+    .reorder-item .r-edit-emoji:focus,
+    .reorder-item .r-edit-name:focus { border-color: var(--red); background: var(--white); }
+    .reorder-item .r-edit-emoji { width: 44px; text-align: center; }
+    .reorder-item .r-edit-name  { flex: 1; min-width: 0; }
+
     /* TOKEN SECTION */
     .token-toggle {
       font-size: 12px; color: var(--text-muted);
@@ -467,9 +505,7 @@ function renderReorderList() {
     const item = document.createElement('div');
     item.className = 'reorder-item';
     item.dataset.file = s.file;
-    item.innerHTML = `<span class="reorder-handle">☰</span><span class="r-emoji"></span><span class="r-name"></span>`;
-    item.querySelector('.r-emoji').textContent = s.emoji || '🔊';
-    item.querySelector('.r-name').textContent  = s.name;
+    setReadMode(item, s);
     list.appendChild(item);
   });
 
@@ -525,6 +561,103 @@ function showReorderErr(msg) {
 function hideReorderChips() {
   document.getElementById('reorder-chip-ok').classList.remove('show');
   document.getElementById('reorder-chip-err').classList.remove('show');
+}
+
+// ── EDITAR / ELIMINAR ────────────────────────────────────────
+function setReadMode(item, s) {
+  item.classList.remove('editing');
+  item.innerHTML = `
+    <span class="reorder-handle">☰</span>
+    <span class="r-emoji"></span>
+    <span class="r-name"></span>
+    <div class="r-actions">
+      <button class="r-action-btn r-edit-btn" title="Editar">✏️</button>
+      <button class="r-action-btn r-del-btn"  title="Eliminar">🗑️</button>
+    </div>
+  `;
+  item.querySelector('.r-emoji').textContent = s.emoji || '🔊';
+  item.querySelector('.r-name').textContent  = s.name;
+  item.querySelector('.r-edit-btn').onclick = () => setEditMode(item, s);
+  item.querySelector('.r-del-btn').onclick  = () => deleteSound(item, s);
+}
+
+function setEditMode(item, s) {
+  item.classList.add('editing');
+  item.innerHTML = `
+    <span class="reorder-handle">☰</span>
+    <input type="text" class="r-edit-emoji" maxlength="2" autocomplete="off" />
+    <input type="text" class="r-edit-name" maxlength="28" autocomplete="off" />
+    <div class="r-actions">
+      <button class="r-action-btn r-save">Guardar</button>
+      <button class="r-action-btn r-cancel">Cancelar</button>
+    </div>
+  `;
+  item.querySelector('.r-edit-emoji').value = s.emoji || '🔊';
+  item.querySelector('.r-edit-name').value  = s.name;
+  item.querySelector('.r-save').onclick   = () => saveEditSound(item, s);
+  item.querySelector('.r-cancel').onclick = () => setReadMode(item, s);
+}
+
+async function saveEditSound(item, s) {
+  const name  = item.querySelector('.r-edit-name').value.trim();
+  const emoji = item.querySelector('.r-edit-emoji').value.trim() || '🔊';
+  if (!name) { alert('Poné un nombre al sonido'); return; }
+
+  const saveBtn = item.querySelector('.r-save');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Guardando…';
+
+  const prevName  = s.name;
+  const prevEmoji = s.emoji;
+  s.name  = name;
+  s.emoji = emoji;
+
+  try {
+    await persistReorderSounds(`Edito sonido: ${name}`);
+    setReadMode(item, s);
+  } catch (err) {
+    console.error(err);
+    alert('Error al guardar: ' + err.message);
+    s.name  = prevName;
+    s.emoji = prevEmoji;
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Guardar';
+  }
+}
+
+async function deleteSound(item, s) {
+  if (!confirm(`¿Eliminar "${s.name}"?`)) return;
+
+  const delBtn = item.querySelector('.r-del-btn');
+  delBtn.disabled = true;
+
+  const idx = reorderSounds.indexOf(s);
+  reorderSounds.splice(idx, 1);
+
+  try {
+    await persistReorderSounds(`Elimino sonido: ${s.name}`);
+    item.remove();
+    if (!reorderSounds.length) {
+      document.getElementById('reorder-list').innerHTML = '<p id="reorder-empty">No hay sonidos todavía.</p>';
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Error al eliminar: ' + err.message);
+    reorderSounds.splice(idx, 0, s);
+    delBtn.disabled = false;
+  }
+}
+
+async function persistReorderSounds(message) {
+  const newJson = JSON.stringify(reorderSounds, null, 2);
+  const newB64  = btoa(unescape(encodeURIComponent(newJson)));
+  const res = await ghPut(`contents/sounds.json`, {
+    message,
+    content: newB64,
+    branch:  BRANCH,
+    sha:     reorderSha
+  });
+  reorderSha = res.content.sha;
 }
 
 // ── UI HELPERS ─────────────────────────────────────────────
