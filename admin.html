@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin · Soundboard Tate</title>
+  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/sebertorello/ScannerTate/main/public/img/icon-512.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --red:        #CF1E29;
+      --red-dark:   #a01520;
+      --text:       #51515C;
+      --text-dark:  #343a40;
+      --text-muted: #6c757d;
+      --border:     #dee2e6;
+      --bg:         #f8f9fa;
+      --white:      #ffffff;
+      --green-bg:   #d1e7dd; --green-text: #0a3622;
+      --warn-bg:    #fff3cd; --warn-text:  #856404;
+      --red-bg:     #f8d7da; --red-text:   #842029;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+    }
+
+    /* HEADER */
+    .header {
+      background: var(--white);
+      border-bottom: 3px solid var(--red);
+      padding: 12px 20px;
+      display: flex; align-items: center; gap: 12px;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .header img { height: 34px; mix-blend-mode: multiply; }
+    .header-text h1 { font-size: 17px; font-weight: 700; color: var(--text-dark); }
+    .header-text p  { font-size: 11px; color: var(--text-muted); }
+    .back-btn {
+      margin-left: auto;
+      font-family: 'Poppins', sans-serif;
+      font-size: 12px; font-weight: 600;
+      padding: 7px 14px; border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: transparent; color: var(--text-muted);
+      cursor: pointer; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .back-btn:hover { border-color: var(--red); color: var(--red); }
+
+    /* CONTENT */
+    .content { max-width: 520px; margin: 0 auto; padding: 32px 20px 60px; }
+
+    /* CARD */
+    .card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: var(--red); margin-bottom: 16px;
+    }
+
+    /* FORM FIELDS */
+    .field { margin-bottom: 14px; }
+    .field label {
+      display: block; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      color: var(--text-muted); margin-bottom: 5px;
+    }
+    .field input[type="text"],
+    .field input[type="password"] {
+      width: 100%;
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px; padding: 10px 14px;
+      border: 1.5px solid var(--border); border-radius: 8px;
+      outline: none; color: var(--text-dark);
+      background: var(--bg); transition: border-color 0.15s;
+    }
+    .field input:focus { border-color: var(--red); background: var(--white); }
+    .field small { font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block; }
+
+    /* EMOJI ROW */
+    .emoji-row { display: flex; gap: 8px; align-items: flex-end; }
+    .emoji-row .field:first-child { flex: 1; }
+    .emoji-row .field:last-child input { width: 64px; text-align: center; font-size: 18px; }
+
+    /* UPLOAD ZONE */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .upload-zone:hover  { border-color: var(--red); color: var(--red); background: #fff8f8; }
+    .upload-zone.filled { border-color: var(--green-text); background: var(--green-bg); color: var(--green-text); border-style: solid; }
+    .upload-zone input  { display: none; }
+    .upload-zone .uz-icon { font-size: 28px; margin-bottom: 6px; }
+
+    /* SUBMIT */
+    .btn-submit {
+      width: 100%;
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px; font-weight: 700;
+      padding: 14px; border-radius: 10px; border: none;
+      background: var(--red); color: #fff;
+      cursor: pointer; transition: background 0.15s;
+      margin-top: 4px;
+    }
+    .btn-submit:hover    { background: var(--red-dark); }
+    .btn-submit:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; }
+
+    /* PROGRESS */
+    .progress { display: none; margin-top: 16px; }
+    .progress.show { display: block; }
+    .progress-bar-wrap {
+      background: var(--border); border-radius: 20px;
+      height: 6px; overflow: hidden; margin-bottom: 6px;
+    }
+    .progress-bar {
+      height: 100%; background: var(--red);
+      border-radius: 20px; width: 0;
+      transition: width 0.3s;
+    }
+    .progress-label { font-size: 12px; color: var(--text-muted); text-align: center; }
+
+    /* CHIPS */
+    .chip {
+      border-radius: 8px; padding: 12px 16px;
+      font-size: 13px; line-height: 1.5; margin-top: 14px;
+      display: none;
+    }
+    .chip.show { display: flex; gap: 10px; align-items: flex-start; }
+    .chip-ok   { background: var(--green-bg); color: var(--green-text); }
+    .chip-err  { background: var(--red-bg);   color: var(--red-text); }
+    .chip-warn { background: var(--warn-bg);  color: var(--warn-text); }
+
+    /* TOKEN SECTION */
+    .token-toggle {
+      font-size: 12px; color: var(--text-muted);
+      cursor: pointer; text-decoration: underline;
+      background: none; border: none;
+      font-family: 'Poppins', sans-serif;
+      margin-top: 8px; display: block;
+    }
+    #token-section { display: none; margin-top: 14px; }
+    #token-section.show { display: block; }
+
+    .footer { background: var(--text-dark); color: #adb5bd; text-align: center; padding: 18px; font-size: 12px; margin-top: 40px; }
+    .footer b { color: #fff; }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <img src="https://raw.githubusercontent.com/sebertorello/ScannerTate/main/public/img/LogoTate.png" alt="Tate" />
+  <div class="header-text">
+    <h1>Subir audio</h1>
+    <p>Admin · Soundboard Tate</p>
+  </div>
+  <a href="/" class="back-btn">← Volver</a>
+</header>
+
+<main class="content">
+
+  <!-- TOKEN -->
+  <div class="card">
+    <p class="card-title">🔑 Acceso</p>
+    <div id="token-status"></div>
+
+    <div id="token-input-wrap">
+      <div class="field">
+        <label>Token de GitHub</label>
+        <input type="password" id="token-field" placeholder="ghp_..." autocomplete="off" />
+        <small>Se guarda solo en este dispositivo. Nunca se envía a ningún servidor.</small>
+      </div>
+      <button class="btn-submit" onclick="saveToken()" style="margin-top:0;">Guardar token</button>
+    </div>
+  </div>
+
+  <!-- FORM -->
+  <div class="card" id="upload-card" style="display:none;">
+    <p class="card-title">🎵 Nuevo sonido</p>
+
+    <div class="emoji-row">
+      <div class="field">
+        <label>Nombre del botón</label>
+        <input type="text" id="sound-name" placeholder="Ej: Risa de Santi" maxlength="28" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label>Emoji</label>
+        <input type="text" id="sound-emoji" placeholder="😂" maxlength="2" autocomplete="off" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Archivo de audio</label>
+      <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+        <div class="uz-icon">🎙️</div>
+        <div id="upload-label">Tocá para elegir MP3</div>
+        <input type="file" id="file-input" accept=".mp3,.wav,.ogg,.m4a,.aac,audio/*" />
+      </div>
+    </div>
+
+    <button class="btn-submit" id="submit-btn" onclick="uploadSound()">Subir sonido</button>
+
+    <div class="progress" id="progress">
+      <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+      <div class="progress-label" id="progress-label">Subiendo…</div>
+    </div>
+
+    <div class="chip chip-ok"  id="chip-ok">  ✅ <span id="chip-ok-msg"></span></div>
+    <div class="chip chip-err" id="chip-err"> ❌ <span id="chip-err-msg"></span></div>
+  </div>
+
+  <div class="chip chip-warn show" id="chip-info">
+    ⚠️ <span>Esta página es solo para agregar sonidos. Cualquiera con el token puede usarla — compartilo solo con personas de confianza.</span>
+  </div>
+
+</main>
+
+<footer class="footer">
+  <b>Soundboard Admin</b> · Tate / Vertical Producciones
+</footer>
+
+<script>
+// ── CONFIG — editá esto si cambiás el repo ──────────────────
+const REPO  = 'sebertorello/botonera-tate';
+const BRANCH = 'main';
+// ───────────────────────────────────────────────────────────
+
+const COLORS = [
+  '#CF1E29','#2563EB','#16A34A','#D97706',
+  '#7C3AED','#0891B2','#DB2777','#059669',
+  '#EA580C','#9333EA','#0369A1','#B45309'
+];
+
+// ── TOKEN ──────────────────────────────────────────────────
+function getToken() { try { return localStorage.getItem('sb-token') || ''; } catch { return ''; } }
+function setToken(t) { try { localStorage.setItem('sb-token', t); } catch {} }
+
+function saveToken() {
+  const t = document.getElementById('token-field').value.trim();
+  if (!t.startsWith('ghp_') && !t.startsWith('github_pat_')) {
+    showErr('El token tiene que empezar con ghp_ o github_pat_'); return;
+  }
+  setToken(t);
+  checkToken();
+}
+
+async function checkToken() {
+  const t = getToken();
+  if (!t) return;
+
+  const res = await fetch(`https://api.github.com/repos/${REPO}`, {
+    headers: { Authorization: `token ${t}` }
+  });
+
+  const wrap = document.getElementById('token-input-wrap');
+  const status = document.getElementById('token-status');
+
+  if (res.ok) {
+    wrap.style.display = 'none';
+    status.innerHTML = `<div class="chip chip-ok show">✅ <span>Token válido — podés subir audios.</span></div>
+      <button class="token-toggle" onclick="changeToken()">Cambiar token</button>`;
+    document.getElementById('upload-card').style.display = 'block';
+  } else {
+    status.innerHTML = `<div class="chip chip-err show">❌ <span>Token inválido o sin permisos. Creá uno nuevo con acceso <b>repo</b>.</span></div>`;
+    document.getElementById('upload-card').style.display = 'none';
+  }
+}
+
+function changeToken() {
+  setToken('');
+  document.getElementById('token-input-wrap').style.display = 'block';
+  document.getElementById('token-status').innerHTML = '';
+  document.getElementById('upload-card').style.display = 'none';
+}
+
+// ── GITHUB API HELPERS ─────────────────────────────────────
+async function ghGet(path) {
+  const res = await fetch(`https://api.github.com/repos/${REPO}/${path}`, {
+    headers: { Authorization: `token ${getToken()}`, Accept: 'application/vnd.github.v3+json' }
+  });
+  if (!res.ok) throw new Error(`GitHub ${res.status}: ${await res.text()}`);
+  return res.json();
+}
+
+async function ghPut(path, body) {
+  const res = await fetch(`https://api.github.com/repos/${REPO}/${path}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `token ${getToken()}`,
+      Accept: 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error(`GitHub ${res.status}: ${await res.text()}`);
+  return res.json();
+}
+
+// ── FILE → BASE64 ──────────────────────────────────────────
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload  = e => resolve(e.target.result.split(',')[1]);
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(file);
+  });
+}
+
+// ── UPLOAD ─────────────────────────────────────────────────
+async function uploadSound() {
+  const name  = document.getElementById('sound-name').value.trim();
+  const emoji = document.getElementById('sound-emoji').value.trim() || '🔊';
+  const file  = document.getElementById('file-input').files[0];
+
+  if (!name) { showErr('Poné un nombre al sonido'); return; }
+  if (!file) { showErr('Elegí un archivo de audio'); return; }
+
+  hideChips();
+  setProgress(10, 'Leyendo archivo…');
+
+  try {
+    // 1. Convertir archivo a base64
+    const b64 = await fileToBase64(file);
+    setProgress(25, 'Subiendo audio a GitHub…');
+
+    // 2. Nombre de archivo: limpio, sin espacios raros
+    const ext      = file.name.split('.').pop().toLowerCase();
+    const safeName = name.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')  // saca tildes
+      .replace(/[^a-z0-9]+/g, '-')                        // espacios → guiones
+      .replace(/^-|-$/g, '');
+    const filePath = `sounds/${safeName}.${ext}`;
+
+    // 3. Ver si el archivo ya existe (para obtener SHA)
+    let existingSha;
+    try {
+      const existing = await ghGet(`contents/${filePath}`);
+      existingSha = existing.sha;
+    } catch {}
+
+    // 4. Subir MP3
+    await ghPut(`contents/${filePath}`, {
+      message: `Agrego sonido: ${name}`,
+      content: b64,
+      branch:  BRANCH,
+      ...(existingSha ? { sha: existingSha } : {})
+    });
+    setProgress(60, 'Actualizando sounds.json…');
+
+    // 5. Leer sounds.json actual
+    let currentSounds = [];
+    let jsonSha;
+    try {
+      const jsonFile = await ghGet(`contents/sounds.json`);
+      jsonSha = jsonFile.sha;
+      currentSounds = JSON.parse(atob(jsonFile.content.replace(/\n/g, '')));
+    } catch {}
+
+    // 6. Agregar nueva entrada (evitar duplicados por nombre de archivo)
+    currentSounds = currentSounds.filter(s => s.file !== filePath);
+    const colorIdx = currentSounds.length % COLORS.length;
+    currentSounds.push({
+      name,
+      emoji,
+      file: filePath,
+      color: COLORS[colorIdx]
+    });
+
+    // 7. Subir sounds.json actualizado
+    const newJson = JSON.stringify(currentSounds, null, 2);
+    const newB64  = btoa(unescape(encodeURIComponent(newJson)));
+
+    await ghPut(`contents/sounds.json`, {
+      message: `Actualizo sounds.json: agrego ${name}`,
+      content: newB64,
+      branch:  BRANCH,
+      sha:     jsonSha
+    });
+
+    setProgress(100, '¡Listo!');
+    showOk(`"${name}" subido correctamente. En 1-2 minutos aparece el botón en el Soundboard.`);
+    resetForm();
+
+  } catch(err) {
+    console.error(err);
+    hideProgress();
+    showErr('Error al subir: ' + err.message);
+  }
+}
+
+// ── UI HELPERS ─────────────────────────────────────────────
+function setProgress(pct, label) {
+  document.getElementById('progress').classList.add('show');
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = label;
+  document.getElementById('submit-btn').disabled = true;
+}
+function hideProgress() {
+  document.getElementById('progress').classList.remove('show');
+  document.getElementById('submit-btn').disabled = false;
+}
+function showOk(msg) {
+  hideProgress();
+  document.getElementById('chip-ok-msg').textContent = msg;
+  document.getElementById('chip-ok').classList.add('show');
+}
+function showErr(msg) {
+  document.getElementById('chip-err-msg').textContent = msg;
+  document.getElementById('chip-err').classList.add('show');
+}
+function hideChips() {
+  document.getElementById('chip-ok').classList.remove('show');
+  document.getElementById('chip-err').classList.remove('show');
+}
+function resetForm() {
+  document.getElementById('sound-name').value  = '';
+  document.getElementById('sound-emoji').value = '';
+  document.getElementById('file-input').value  = '';
+  document.getElementById('upload-zone').classList.remove('filled');
+  document.getElementById('upload-label').textContent = 'Tocá para elegir MP3';
+  document.getElementById('submit-btn').disabled = false;
+  setTimeout(hideProgress, 500);
+}
+
+document.getElementById('file-input').addEventListener('change', function() {
+  const f = this.files[0];
+  if (!f) return;
+  const n = f.name.length > 24 ? f.name.slice(0,22)+'…' : f.name;
+  document.getElementById('upload-zone').classList.add('filled');
+  document.getElementById('upload-label').textContent = '✓ ' + n;
+});
+
+['sound-name','sound-emoji'].forEach(id =>
+  document.getElementById(id).addEventListener('keydown', e => {
+    if (e.key === 'Enter') uploadSound();
+  })
+);
+
+// ── INIT ───────────────────────────────────────────────────
+checkToken();
+</script>
+</body>
+</html>
