@@ -28,5 +28,11 @@
     "emoji": "🔊",
     "file": "sounds/asimismo.mp3",
     "color": "#7C3AED"
+  },
+  {
+    "name": "Cacho Coudet",
+    "emoji": "⚽️",
+    "file": "sounds/cacho-coudet.mp3",
+    "color": "#0891B2"
   }
 ]
