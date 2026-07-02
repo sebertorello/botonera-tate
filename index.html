@@ -172,6 +172,64 @@
       display: inline-flex; align-items: center;
     }
     .btn-admin:hover { background: var(--red-dark); }
+
+    /* HELP BUTTON */
+    .help-btn {
+      position: fixed; bottom: 20px; right: 20px;
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--red); color: #fff;
+      border: none; font-size: 18px; font-weight: 700;
+      font-family: 'Poppins', sans-serif;
+      cursor: pointer; z-index: 500;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .help-btn:active { transform: scale(0.93); }
+
+    /* TUTORIAL MODAL */
+    .tutorial-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      display: none; align-items: center; justify-content: center;
+      z-index: 600; padding: 20px;
+    }
+    .tutorial-overlay.show { display: flex; }
+    .tutorial-card {
+      background: var(--white);
+      max-width: 380px; width: 100%;
+      border-radius: 16px; padding: 28px;
+      position: relative;
+      animation: tutorialIn 0.25s ease-out;
+    }
+    @keyframes tutorialIn {
+      from { opacity: 0; transform: scale(0.92); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .tutorial-close {
+      position: absolute; top: 14px; right: 14px;
+      background: none; border: none; font-size: 16px;
+      color: var(--text-muted); cursor: pointer; line-height: 1; padding: 4px;
+    }
+    .tutorial-close:hover { color: var(--red); }
+    .tutorial-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 18px; }
+    .tutorial-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); }
+    .tutorial-dot.active { background: var(--red); }
+    .tutorial-screen h2 { font-size: 17px; font-weight: 700; color: var(--text-dark); margin-bottom: 12px; text-align: center; }
+    .tutorial-screen p  { font-size: 13px; line-height: 1.7; color: var(--text); }
+    .tutorial-screen ol { font-size: 13px; line-height: 1.7; color: var(--text); padding-left: 20px; }
+    .tutorial-screen li { margin-bottom: 4px; }
+    .tutorial-nav { display: flex; gap: 10px; margin-top: 22px; }
+    .tutorial-btn {
+      flex: 1; font-family: 'Poppins', sans-serif;
+      font-size: 13px; font-weight: 700;
+      padding: 12px; border-radius: 10px; cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .tutorial-btn-primary { background: var(--red); color: #fff; border: none; }
+    .tutorial-btn-primary:hover { background: var(--red-dark); }
+    .tutorial-btn-outline { background: transparent; color: var(--text-muted); border: 1.5px solid var(--border); }
+    .tutorial-btn-outline:hover { border-color: var(--red); color: var(--red); }
+    .tutorial-btn.hide { visibility: hidden; }
   </style>
 </head>
 <body>
@@ -207,6 +265,20 @@
 </div>
 
 <div id="toast"></div>
+
+<button id="help-btn" class="help-btn" onclick="openTutorial()" aria-label="Ayuda">?</button>
+
+<div id="tutorial-overlay" class="tutorial-overlay">
+  <div class="tutorial-card">
+    <button class="tutorial-close" onclick="closeTutorial()" aria-label="Cerrar">✕</button>
+    <div class="tutorial-dots" id="tutorial-dots"></div>
+    <div class="tutorial-screen" id="tutorial-screen"></div>
+    <div class="tutorial-nav">
+      <button class="tutorial-btn tutorial-btn-outline" id="tutorial-prev" onclick="tutorialPrev()">Anterior</button>
+      <button class="tutorial-btn tutorial-btn-primary" id="tutorial-next" onclick="tutorialNext()">Siguiente</button>
+    </div>
+  </div>
+</div>
 
 <footer class="footer">
   <b>Soundboard</b> · Tate / Vertical Producciones
@@ -378,6 +450,77 @@ async function installApp() {
   document.getElementById('install-btn').style.display = 'none';
 }
 
+// ── Tutorial ────────────────────────────────────
+const TUTORIAL_SCREENS = [
+  {
+    title: '¡Bienvenido al Soundboard! 🎛️',
+    body: '<p>La botonera de audios de Tate. Tocá cualquier botón para reproducir un sonido. Si hay algo sonando, lo para y arranca el nuevo.</p>'
+  },
+  {
+    title: 'Instalá la app en Android 🤖',
+    body: `<ol>
+      <li>Abrí esta página en Chrome</li>
+      <li>Tocá el botón "⬇ Instalar" que aparece arriba, o el menú de Chrome (⋮) → "Agregar a pantalla de inicio"</li>
+      <li>Confirmá y listo — queda como una app en tu celu</li>
+    </ol>`
+  },
+  {
+    title: 'Instalá la app en iPhone 🍎',
+    body: `<ol>
+      <li>Abrí esta página en Safari (no Chrome)</li>
+      <li>Tocá el ícono de compartir (el cuadrado con la flecha ↑) en la barra de abajo</li>
+      <li>Elegí "Agregar a pantalla de inicio"</li>
+      <li>Confirmá — queda con el ícono de Tate</li>
+    </ol>`
+  },
+  {
+    title: '¿Querés agregar un sonido? 🎙️',
+    body: '<p>Tocá el botón "＋ Subir audio" arriba. Vas a necesitar el token de acceso — pedíselo a Santi.</p>'
+  }
+];
+
+let tutorialStep = 0;
+
+function openTutorial() {
+  tutorialStep = 0;
+  renderTutorialStep();
+  document.getElementById('tutorial-overlay').classList.add('show');
+}
+
+function closeTutorial() {
+  document.getElementById('tutorial-overlay').classList.remove('show');
+  try { localStorage.setItem('sb-tutorial-ok', '1'); } catch {}
+}
+
+function tutorialNext() {
+  if (tutorialStep < TUTORIAL_SCREENS.length - 1) {
+    tutorialStep++;
+    renderTutorialStep();
+  } else {
+    closeTutorial();
+  }
+}
+
+function tutorialPrev() {
+  if (tutorialStep > 0) {
+    tutorialStep--;
+    renderTutorialStep();
+  }
+}
+
+function renderTutorialStep() {
+  const screen = TUTORIAL_SCREENS[tutorialStep];
+  document.getElementById('tutorial-screen').innerHTML = `<h2>${screen.title}</h2>${screen.body}`;
+
+  document.getElementById('tutorial-dots').innerHTML = TUTORIAL_SCREENS
+    .map((_, i) => `<span class="tutorial-dot${i === tutorialStep ? ' active' : ''}"></span>`)
+    .join('');
+
+  document.getElementById('tutorial-prev').classList.toggle('hide', tutorialStep === 0);
+  document.getElementById('tutorial-next').textContent =
+    tutorialStep === TUTORIAL_SCREENS.length - 1 ? '¡Entendido!' : 'Siguiente';
+}
+
 // ── iOS warn ──────────────────────────────────
 function isIOS() {
   return /iP(hone|ad|od)/i.test(navigator.userAgent) ||
@@ -392,6 +535,7 @@ function dismissWarn() {
 (async function() {
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
   try { if (isIOS() && !localStorage.getItem('ios-warn-ok')) document.getElementById('ios-warn').classList.add('show'); } catch {}
+  try { if (!localStorage.getItem('sb-tutorial-ok')) openTutorial(); } catch {}
   await loadSounds();
 })();
 </script>
