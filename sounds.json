@@ -10,5 +10,11 @@
     "emoji": "☠️",
     "file": "sounds/Quere que me maten mami.mp3",
     "color": "#2563EB"
+  },
+  {
+    "name": "Mirá la adrenalina que tengo",
+    "emoji": "🫨",
+    "file": "sounds/mira-la-adrenalina-que-tengo.mp3",
+    "color": "#16A34A"
   }
 ]
