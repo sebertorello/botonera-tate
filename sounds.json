@@ -24,27 +24,27 @@
     "color": "#D97706"
   },
   {
+    "name": "Coronilla",
+    "emoji": "👑",
+    "file": "sounds/coronilla.mp3",
+    "color": "#7C3AED"
+  },
+  {
     "name": "Asimismo",
     "emoji": "🔊",
     "file": "sounds/asimismo.mp3",
-    "color": "#7C3AED"
+    "color": "#0891B2"
   },
   {
     "name": "Cacho Coudet",
     "emoji": "⚽️",
     "file": "sounds/cacho-coudet.mp3",
-    "color": "#0891B2"
+    "color": "#DB2777"
   },
   {
     "name": "Es un crack",
     "emoji": "🫡",
     "file": "sounds/es-un-crack.mp3",
-    "color": "#DB2777"
-  },
-  {
-    "name": "Coronilla",
-    "emoji": "👑",
-    "file": "sounds/coronilla.mp3",
     "color": "#059669"
   }
 ]
