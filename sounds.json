@@ -1,13 +1,14 @@
 [
   {
-    "name": "Quere que me maten mami",
-    "emoji": "ð",
-    "file": "sounds/Quere que me maten mami.mp3"
-  },
-  {
     "name": "Asimismo",
     "emoji": "🔊",
     "file": "sounds/asimismo.mp3",
+    "color": "#CF1E29"
+  },
+  {
+    "name": "Quere que me maten mami",
+    "emoji": "ð",
+    "file": "sounds/Quere que me maten mami.mp3",
     "color": "#2563EB"
   }
 ]
