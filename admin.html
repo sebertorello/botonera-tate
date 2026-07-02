@@ -171,7 +171,7 @@
     <h1>Subir audio</h1>
     <p>Admin · Soundboard Tate</p>
   </div>
-  <a href="/" class="back-btn">← Volver</a>
+  <a href="index.html" class="back-btn">← Volver</a>
 </header>
 
 <main class="content">
@@ -370,7 +370,7 @@ async function uploadSound() {
     try {
       const jsonFile = await ghGet(`contents/sounds.json`);
       jsonSha = jsonFile.sha;
-      currentSounds = JSON.parse(atob(jsonFile.content.replace(/\n/g, '')));
+      currentSounds = JSON.parse(decodeURIComponent(escape(atob(jsonFile.content.replace(/\n/g, '')))));
     } catch {}
 
     // 6. Agregar nueva entrada (evitar duplicados por nombre de archivo)

@@ -163,6 +163,15 @@
       .s-emoji { font-size: 46px; margin-bottom: 10px; }
       .s-name  { font-size: 13px; }
     }
+    .btn-admin {
+      font-family: 'Poppins', sans-serif;
+      font-size: 12px; font-weight: 600;
+      padding: 7px 14px; border-radius: 20px;
+      background: var(--red); color: #fff;
+      text-decoration: none;
+      display: inline-flex; align-items: center;
+    }
+    .btn-admin:hover { background: var(--red-dark); }
   </style>
 </head>
 <body>
@@ -173,6 +182,7 @@
     <h1>Soundboard</h1>
     <p>Botonera de audios · Tate</p>
   </div>
+  <a href="admin.html" class="btn-admin">＋ Subir audio</a>
   <button class="btn-install" id="install-btn" onclick="installApp()">⬇ Instalar</button>
 </header>
 
