@@ -148,6 +148,23 @@
     .chip-err  { background: var(--red-bg);   color: var(--red-text); }
     .chip-warn { background: var(--warn-bg);  color: var(--warn-text); }
 
+    /* REORDER */
+    .reorder-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .reorder-item {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 13px; color: var(--text-dark);
+    }
+    .reorder-handle { color: var(--text-muted); font-size: 16px; cursor: grab; touch-action: none; }
+    .reorder-item .r-emoji { font-size: 18px; }
+    .reorder-item .r-name  { flex: 1; }
+    .reorder-item.sortable-ghost  { opacity: 0.4; }
+    .reorder-item.sortable-chosen { border-color: var(--red); }
+    #reorder-empty { font-size: 12px; color: var(--text-muted); }
+
     /* TOKEN SECTION */
     .token-toggle {
       font-size: 12px; color: var(--text-muted);
@@ -226,6 +243,16 @@
     <div class="chip chip-err" id="chip-err"> ❌ <span id="chip-err-msg"></span></div>
   </div>
 
+  <!-- REORDER -->
+  <div class="card" id="reorder-card" style="display:none;">
+    <p class="card-title">↕️ Reordenar sonidos</p>
+    <div class="reorder-list" id="reorder-list"></div>
+    <button class="btn-submit" id="save-order-btn" onclick="saveOrder()">Guardar orden</button>
+
+    <div class="chip chip-ok"  id="reorder-chip-ok">  ✅ <span id="reorder-chip-ok-msg"></span></div>
+    <div class="chip chip-err" id="reorder-chip-err"> ❌ <span id="reorder-chip-err-msg"></span></div>
+  </div>
+
   <div class="chip chip-warn show" id="chip-info">
     ⚠️ <span>Esta página es solo para agregar sonidos. Cualquiera con el token puede usarla — compartilo solo con personas de confianza.</span>
   </div>
@@ -236,6 +263,7 @@
   <b>Soundboard Admin</b> · Tate / Vertical Producciones
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script>
 // ── CONFIG — editá esto si cambiás el repo ──────────────────
 const REPO  = 'sebertorello/botonera-tate';
@@ -277,6 +305,7 @@ async function checkToken() {
     status.innerHTML = `<div class="chip chip-ok show">✅ <span>Token válido — podés subir audios.</span></div>
       <button class="token-toggle" onclick="changeToken()">Cambiar token</button>`;
     document.getElementById('upload-card').style.display = 'block';
+    loadReorderList();
   } else {
     status.innerHTML = `<div class="chip chip-err show">❌ <span>Token inválido o sin permisos. Creá uno nuevo con acceso <b>repo</b>.</span></div>`;
     document.getElementById('upload-card').style.display = 'none';
@@ -288,6 +317,7 @@ function changeToken() {
   document.getElementById('token-input-wrap').style.display = 'block';
   document.getElementById('token-status').innerHTML = '';
   document.getElementById('upload-card').style.display = 'none';
+  document.getElementById('reorder-card').style.display = 'none';
 }
 
 // ── GITHUB API HELPERS ─────────────────────────────────────
@@ -397,12 +427,104 @@ async function uploadSound() {
     setProgress(100, '¡Listo!');
     showOk(`"${name}" subido correctamente. En 1-2 minutos aparece el botón en el Soundboard.`);
     resetForm();
+    loadReorderList();
 
   } catch(err) {
     console.error(err);
     hideProgress();
     showErr('Error al subir: ' + err.message);
   }
+}
+
+// ── REORDER ────────────────────────────────────────────────
+let reorderSounds = [];
+let reorderSha;
+let sortableInstance;
+
+async function loadReorderList() {
+  try {
+    const jsonFile = await ghGet(`contents/sounds.json`);
+    reorderSha = jsonFile.sha;
+    reorderSounds = JSON.parse(decodeURIComponent(escape(atob(jsonFile.content.replace(/\n/g, '')))));
+  } catch (err) {
+    console.error(err);
+    reorderSounds = [];
+  }
+  renderReorderList();
+  document.getElementById('reorder-card').style.display = 'block';
+}
+
+function renderReorderList() {
+  const list = document.getElementById('reorder-list');
+  list.innerHTML = '';
+
+  if (!reorderSounds.length) {
+    list.innerHTML = '<p id="reorder-empty">No hay sonidos todavía.</p>';
+    return;
+  }
+
+  reorderSounds.forEach(s => {
+    const item = document.createElement('div');
+    item.className = 'reorder-item';
+    item.dataset.file = s.file;
+    item.innerHTML = `<span class="reorder-handle">☰</span><span class="r-emoji"></span><span class="r-name"></span>`;
+    item.querySelector('.r-emoji').textContent = s.emoji || '🔊';
+    item.querySelector('.r-name').textContent  = s.name;
+    list.appendChild(item);
+  });
+
+  if (sortableInstance) sortableInstance.destroy();
+  sortableInstance = new Sortable(list, {
+    animation: 150,
+    handle: '.reorder-handle',
+    ghostClass: 'sortable-ghost',
+    chosenClass: 'sortable-chosen',
+    onEnd: () => {
+      const order = [...list.children].map(el => el.dataset.file);
+      reorderSounds = order.map(f => reorderSounds.find(s => s.file === f));
+    }
+  });
+}
+
+async function saveOrder() {
+  const btn = document.getElementById('save-order-btn');
+  btn.disabled = true;
+  hideReorderChips();
+
+  try {
+    reorderSounds.forEach((s, i) => { s.color = COLORS[i % COLORS.length]; });
+
+    const newJson = JSON.stringify(reorderSounds, null, 2);
+    const newB64  = btoa(unescape(encodeURIComponent(newJson)));
+
+    const res = await ghPut(`contents/sounds.json`, {
+      message: 'Reordeno sonidos',
+      content: newB64,
+      branch:  BRANCH,
+      sha:     reorderSha
+    });
+    reorderSha = res.content.sha;
+
+    showReorderOk('Orden guardado. En 1-2 minutos se refleja en el Soundboard.');
+  } catch (err) {
+    console.error(err);
+    showReorderErr('Error al guardar: ' + err.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function showReorderOk(msg) {
+  document.getElementById('reorder-chip-ok-msg').textContent = msg;
+  document.getElementById('reorder-chip-ok').classList.add('show');
+}
+function showReorderErr(msg) {
+  document.getElementById('reorder-chip-err-msg').textContent = msg;
+  document.getElementById('reorder-chip-err').classList.add('show');
+}
+function hideReorderChips() {
+  document.getElementById('reorder-chip-ok').classList.remove('show');
+  document.getElementById('reorder-chip-err').classList.remove('show');
 }
 
 // ── UI HELPERS ─────────────────────────────────────────────
