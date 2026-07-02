@@ -1,26 +1,26 @@
 [
   {
-    "name": "Asimismo",
-    "emoji": "🔊",
-    "file": "sounds/asimismo.mp3",
-    "color": "#CF1E29"
-  },
-  {
     "name": "Quere que me maten mami",
     "emoji": "☠️",
     "file": "sounds/Quere que me maten mami.mp3",
-    "color": "#2563EB"
+    "color": "#CF1E29"
   },
   {
     "name": "Mirá la adrenalina que tengo",
     "emoji": "🫨",
     "file": "sounds/mira-la-adrenalina-que-tengo.mp3",
-    "color": "#16A34A"
+    "color": "#2563EB"
   },
   {
     "name": "Guanaco",
     "emoji": "🦙",
     "file": "sounds/guanaco.mp3",
+    "color": "#16A34A"
+  },
+  {
+    "name": "Asimismo",
+    "emoji": "🔊",
+    "file": "sounds/asimismo.mp3",
     "color": "#D97706"
   }
 ]
