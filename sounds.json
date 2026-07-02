@@ -40,5 +40,11 @@
     "emoji": "🫡",
     "file": "sounds/es-un-crack.mp3",
     "color": "#DB2777"
+  },
+  {
+    "name": "Coronilla",
+    "emoji": "👑",
+    "file": "sounds/coronilla.mp3",
+    "color": "#059669"
   }
 ]
