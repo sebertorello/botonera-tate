@@ -1,32 +1,32 @@
 [
   {
+    "name": "Dale de una vez",
+    "emoji": "🏃",
+    "file": "sounds/dale-de-una-vez.mp3",
+    "color": "#CF1E29"
+  },
+  {
     "name": "Quere que me maten mami",
     "emoji": "☠️",
     "file": "sounds/Quere que me maten mami.mp3",
-    "color": "#CF1E29"
+    "color": "#2563EB"
   },
   {
     "name": "Mirá la adrenalina que tengo",
     "emoji": "🫨",
     "file": "sounds/mira-la-adrenalina-que-tengo.mp3",
-    "color": "#2563EB"
+    "color": "#16A34A"
   },
   {
     "name": "Guanaco",
     "emoji": "🦙",
     "file": "sounds/guanaco.mp3",
-    "color": "#16A34A"
+    "color": "#D97706"
   },
   {
     "name": "Asimismo",
     "emoji": "🔊",
     "file": "sounds/asimismo.mp3",
-    "color": "#D97706"
-  },
-  {
-    "name": "Dale de una vez",
-    "emoji": "🏃",
-    "file": "sounds/dale-de-una-vez.mp3",
     "color": "#7C3AED"
   }
 ]
