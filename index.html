@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#CF1E29" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Soundboard" />
+  <title>Soundboard · Tate</title>
+
+  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/sebertorello/ScannerTate/main/public/img/icon-512.png" />
+  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/sebertorello/ScannerTate/main/public/img/icon-512.png" />
+  <link rel="manifest" href="manifest.json" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --red:        #CF1E29;
+      --red-dark:   #a01520;
+      --text:       #51515C;
+      --text-dark:  #343a40;
+      --text-muted: #6c757d;
+      --border:     #dee2e6;
+      --bg:         #f8f9fa;
+      --white:      #ffffff;
+      --warn-bg:    #fff3cd;
+      --warn-text:  #856404;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      padding-bottom: 70px;
+    }
+
+    /* HEADER */
+    .header {
+      background: var(--white);
+      border-bottom: 3px solid var(--red);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .header img { height: 34px; mix-blend-mode: multiply; flex-shrink: 0; }
+    .header-text { flex: 1; }
+    .header-text h1 { font-size: 17px; font-weight: 700; color: var(--text-dark); }
+    .header-text p  { font-size: 11px; color: var(--text-muted); }
+    .btn-install {
+      font-family: 'Poppins', sans-serif;
+      font-size: 12px; font-weight: 600;
+      padding: 7px 14px; border-radius: 20px; border: none;
+      background: #2563eb; color: #fff;
+      cursor: pointer; display: none; align-items: center; gap: 5px;
+    }
+
+    /* iOS WARNING */
+    #ios-warn {
+      background: var(--warn-bg); color: var(--warn-text);
+      padding: 10px 16px; font-size: 12px;
+      display: none; align-items: flex-start; gap: 8px;
+    }
+    #ios-warn.show { display: flex; }
+    #ios-warn button { background: none; border: none; cursor: pointer; color: var(--warn-text); font-size: 15px; margin-left: auto; flex-shrink: 0; }
+
+    /* CONTENT */
+    .content { max-width: 860px; margin: 0 auto; padding: 20px 16px; }
+
+    /* STATUS (loading / error / empty) */
+    #status { text-align: center; padding: 60px 20px; display: none; }
+    #status.show { display: block; }
+    #status .icon { font-size: 44px; margin-bottom: 12px; }
+    #status h3 { font-size: 16px; font-weight: 700; color: var(--text-dark); margin-bottom: 6px; }
+    #status p  { font-size: 13px; color: var(--text-muted); line-height: 1.7; }
+
+    /* SOUND GRID */
+    #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+
+    /* SOUND CARD */
+    .sound-card {
+      border-radius: 16px;
+      padding: 22px 10px 16px;
+      text-align: center;
+      cursor: pointer;
+      border: none; outline: none;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+      transition: transform 0.1s, box-shadow 0.1s;
+      user-select: none; -webkit-user-select: none; -webkit-appearance: none;
+      position: relative; overflow: hidden;
+    }
+    .sound-card::after {
+      content: ''; position: absolute; inset: 0;
+      background: rgba(255,255,255,0); transition: background 0.1s;
+    }
+    .sound-card:active::after { background: rgba(255,255,255,0.15); }
+    .sound-card:active { transform: scale(0.93); box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
+
+    .sound-card.playing { animation: pulse 0.9s ease-in-out infinite; }
+    @keyframes pulse {
+      0%,100% { transform: scale(1);     box-shadow: 0 3px 10px rgba(0,0,0,0.15); }
+      50%      { transform: scale(1.04); box-shadow: 0 6px 22px rgba(0,0,0,0.28), 0 0 0 5px rgba(255,255,255,0.2); }
+    }
+    .sound-card.loading-audio { opacity: 0.7; }
+
+    .s-emoji { font-size: 40px; display: block; line-height: 1; margin-bottom: 9px; }
+    .s-name  { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.95); word-break: break-word; line-height: 1.3; text-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+
+    /* STOP BAR */
+    #stop-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--text-dark); color: #fff;
+      padding: 12px 20px; display: none;
+      align-items: center; justify-content: space-between;
+      z-index: 200; font-size: 13px; font-weight: 500;
+    }
+    #stop-bar.show { display: flex; }
+    .stop-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); display: inline-block; margin-right: 8px; animation: blink 1s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
+    #stop-bar button {
+      font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 600;
+      background: rgba(255,255,255,0.12); color: #fff;
+      border: 1.5px solid rgba(255,255,255,0.25); border-radius: 20px;
+      padding: 6px 16px; cursor: pointer;
+    }
+
+    /* TOAST */
+    #toast {
+      position: fixed; bottom: 70px; left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: var(--text-dark); color: #fff;
+      padding: 9px 18px; border-radius: 24px;
+      font-size: 13px; font-weight: 500;
+      opacity: 0; transition: opacity 0.25s, transform 0.25s;
+      z-index: 300; pointer-events: none; white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* FOOTER */
+    .footer { background: var(--text-dark); color: #adb5bd; text-align: center; padding: 18px; font-size: 12px; margin-top: 40px; }
+    .footer b { color: #fff; }
+
+    /* RESPONSIVE */
+    @media (max-width: 420px) {
+      #grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+      .sound-card { padding: 18px 8px 12px; }
+      .s-emoji { font-size: 32px; }
+      .s-name  { font-size: 11px; }
+    }
+    @media (min-width: 600px) {
+      #grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+      .sound-card { padding: 26px 14px 18px; }
+      .s-emoji { font-size: 46px; margin-bottom: 10px; }
+      .s-name  { font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <img src="https://raw.githubusercontent.com/sebertorello/ScannerTate/main/public/img/LogoTate.png" alt="Tate" />
+  <div class="header-text">
+    <h1>Soundboard</h1>
+    <p>Botonera de audios · Tate</p>
+  </div>
+  <button class="btn-install" id="install-btn" onclick="installApp()">⬇ Instalar</button>
+</header>
+
+<div id="ios-warn">
+  <span>🔇</span>
+  <span>En iPhone, si el <b>switch de silencio</b> lateral está activado, el audio no va a sonar. Desactivalo para usar el Soundboard.</span>
+  <button onclick="dismissWarn()">✕</button>
+</div>
+
+<main class="content">
+  <div id="status">
+    <div class="icon" id="s-icon">⏳</div>
+    <h3 id="s-title">Cargando sonidos…</h3>
+    <p id="s-msg"></p>
+  </div>
+  <div id="grid"></div>
+</main>
+
+<div id="stop-bar">
+  <div><span class="stop-dot"></span><span id="stop-label">Reproduciendo…</span></div>
+  <button onclick="stopAudio()">■ Detener</button>
+</div>
+
+<div id="toast"></div>
+
+<footer class="footer">
+  <b>Soundboard</b> · Tate / Vertical Producciones
+</footer>
+
+<script>
+const COLORS = [
+  '#CF1E29','#2563EB','#16A34A','#D97706',
+  '#7C3AED','#0891B2','#DB2777','#059669',
+  '#EA580C','#9333EA','#0369A1','#B45309'
+];
+
+let sounds        = [];
+let audioCtx      = null;
+let currentSource = null;
+let bufferCache   = new Map();
+let playingFile   = null;
+let deferredPrompt = null;
+
+// ── Audio context ──────────────────────────────
+async function getCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') await audioCtx.resume();
+  return audioCtx;
+}
+
+// ── Fetch + decode (cached) ────────────────────
+async function getBuffer(file) {
+  if (bufferCache.has(file)) return bufferCache.get(file);
+  const ctx    = await getCtx();
+  const res    = await fetch(file);
+  const arr    = await res.arrayBuffer();
+  const buffer = await ctx.decodeAudioData(arr);
+  bufferCache.set(file, buffer);
+  return buffer;
+}
+
+// ── Play ───────────────────────────────────────
+async function playSound(sound, card) {
+  const ctx = await getCtx();
+  stopAudio(false);
+  card.classList.add('loading-audio');
+
+  try {
+    const buf  = await getBuffer(sound.file);
+    card.classList.remove('loading-audio');
+
+    const gain = ctx.createGain();
+    gain.gain.value = 0.8;
+    gain.connect(ctx.destination);
+
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(gain);
+    src.start(0);
+
+    currentSource = src;
+    playingFile   = sound.file;
+    setPlaying(sound.file, true);
+    document.getElementById('stop-label').textContent = sound.name;
+    document.getElementById('stop-bar').classList.add('show');
+
+    src.onended = () => {
+      if (playingFile === sound.file) {
+        setPlaying(sound.file, false);
+        playingFile = null; currentSource = null;
+        document.getElementById('stop-bar').classList.remove('show');
+      }
+    };
+  } catch(err) {
+    card.classList.remove('loading-audio');
+    console.error(err);
+    showToast('No se pudo cargar el audio 😕');
+  }
+}
+
+function stopAudio(ui = true) {
+  if (currentSource) { try { currentSource.stop(); } catch {} currentSource = null; }
+  if (ui && playingFile) {
+    setPlaying(playingFile, false);
+    playingFile = null;
+    document.getElementById('stop-bar').classList.remove('show');
+  }
+}
+
+function setPlaying(file, on) {
+  document.querySelectorAll('.sound-card').forEach(c => {
+    if (c.dataset.file === file) c.classList.toggle('playing', on);
+  });
+}
+
+// ── Render ─────────────────────────────────────
+function renderGrid(list) {
+  document.getElementById('grid').innerHTML = list.map((s, i) => {
+    const color = s.color || COLORS[i % COLORS.length];
+    const emoji = s.emoji || '🔊';
+    return `<button class="sound-card"
+      data-file="${esc(s.file)}"
+      data-index="${i}"
+      style="background:${esc(color)};"
+      onclick="handleTap(this)"
+      title="${esc(s.name)}">
+      <span class="s-emoji">${emoji}</span>
+      <span class="s-name">${esc(s.name)}</span>
+    </button>`;
+  }).join('');
+}
+
+function handleTap(card) {
+  const s = sounds[parseInt(card.dataset.index)];
+  if (s) playSound(s, card);
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Load sounds.json ───────────────────────────
+async function loadSounds() {
+  setStatus('⏳','Cargando sonidos…','');
+  try {
+    const res = await fetch('sounds.json?t=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    sounds = await res.json();
+
+    if (!Array.isArray(sounds) || sounds.length === 0) {
+      setStatus('🎛️','Sin sonidos todavía',
+        'Agregá entradas en <code>sounds.json</code> y subí los MP3 a la carpeta <code>sounds/</code>.');
+      return;
+    }
+    hideStatus();
+    renderGrid(sounds);
+  } catch(err) {
+    setStatus('⚠️','No se pudo cargar sounds.json',
+      'Verificá que el archivo exista y que GitHub Pages esté activo.<br/><small>' + err.message + '</small>');
+  }
+}
+
+function setStatus(icon, title, msg) {
+  document.getElementById('s-icon').textContent  = icon;
+  document.getElementById('s-title').textContent = title;
+  document.getElementById('s-msg').innerHTML     = msg;
+  document.getElementById('status').classList.add('show');
+  document.getElementById('grid').innerHTML = '';
+}
+function hideStatus() { document.getElementById('status').classList.remove('show'); }
+
+// ── Toast ──────────────────────────────────────
+let _tt;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+// ── PWA ───────────────────────────────────────
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredPrompt = e;
+  document.getElementById('install-btn').style.display = 'inline-flex';
+});
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-btn').style.display = 'none';
+});
+async function installApp() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById('install-btn').style.display = 'none';
+}
+
+// ── iOS warn ──────────────────────────────────
+function isIOS() {
+  return /iP(hone|ad|od)/i.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+function dismissWarn() {
+  document.getElementById('ios-warn').classList.remove('show');
+  try { localStorage.setItem('ios-warn-ok','1'); } catch {}
+}
+
+// ── Init ──────────────────────────────────────
+(async function() {
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  try { if (isIOS() && !localStorage.getItem('ios-warn-ok')) document.getElementById('ios-warn').classList.add('show'); } catch {}
+  await loadSounds();
+})();
+</script>
+</body>
+</html>
