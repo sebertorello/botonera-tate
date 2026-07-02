@@ -34,5 +34,11 @@
     "emoji": "⚽️",
     "file": "sounds/cacho-coudet.mp3",
     "color": "#0891B2"
+  },
+  {
+    "name": "Es un crack",
+    "emoji": "🫡",
+    "file": "sounds/es-un-crack.mp3",
+    "color": "#DB2777"
   }
 ]
