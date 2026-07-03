@@ -46,5 +46,11 @@
     "emoji": "🫡",
     "file": "sounds/es-un-crack.mp3",
     "color": "#059669"
+  },
+  {
+    "name": "Chancho",
+    "emoji": "🐷",
+    "file": "sounds/chancho.mp3",
+    "color": "#EA580C"
   }
 ]
